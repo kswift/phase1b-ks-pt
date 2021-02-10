@@ -3,6 +3,7 @@ Phase 1b
 */
 
 #include "phase1Int.h"
+#include "phase1a.c"
 #include "usloss.h"
 #include <stdlib.h>
 #include <string.h>
@@ -18,14 +19,39 @@ typedef struct PCB {
     int             children[P1_MAXPROC];
     int             numOfChildren;
     int             parentID;
+    int             lid;
+    int             vid;
 
     // more fields here
     // who your parent is (processid)
 
 } PCB;
 
+static int priorityQueue1[P1_MAXPROC] = {1};
+static int indexForQueue1 = 0;
+
+static int priorityQueue2[P1_MAXPROC] = {1};
+static int indexForQueue2 = 0;
+
+static int priorityQueue3[P1_MAXPROC] = {1};
+static int indexForQueue3 = 0;
+
+static int priorityQueue4[P1_MAXPROC] = {1};
+static int indexForQueue4 = 0;
+
+static int priorityQueue5[P1_MAXPROC] = {1};
+static int indexForQueue5 = 0;
+
+static int priorityQueue6[1] = {1};
+static int indexForQueue6 = 0;
+
 static PCB processTable[P1_MAXPROC];   // the process table
 static int currProcessID = 0;
+
+void P1Handler(int dev, void *arg) {
+    USLOSS_Console("Error! Illegal Instruction.\n");
+    USLOSS_Halt(0);
+}
 
 void launch(void) {
     assert(contexts[currentCid].startFunc != NULL);
@@ -41,6 +67,8 @@ void P1ProcInit(void) {
         processTable[i].state = P1_STATE_FREE;
         processTable[i].numOfChildren = 0;
         processTable[i].parentID = -1;
+        processTable[i].lid = 0;
+        processTable[i].vid = 0;
 
         // initialize the rest of the PCB
         // when allocating a new control block you need to see whats free
@@ -95,7 +123,12 @@ int P1SetState(int pid, P1_State state, int lid, int vid) {
     int status;
     int cpid;
     // do stuff here
-    if ((state != P1_STATE_READY) || (state != P1_STATE_BLOCKED) || (state != P1_STATE_JOINING) || (state != P1_)STATE_QUIT) {
+
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) == 0) {
+        USLOSS_IllegalInstruction();
+    }
+
+    if ((state != P1_STATE_READY) || (state != P1_STATE_BLOCKED) || (state != P1_STATE_JOINING) || (state != P1_STATE_QUIT)) {
         result = P1_INVALID_STATE;
         return result;
     }
@@ -115,17 +148,37 @@ int P1SetState(int pid, P1_State state, int lid, int vid) {
 void P1Dispatch(int rotate) {
     // select the highest-priority runnable process
     // call P1ContextSwitch to switch to that process
+
+    status = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &start);
+    if (status != USLOSS_DEV_OK) {
+        USLOSS_Halt(status);
+    }
+
+    P1ContextSwitch(cid);
 }
 
 int P1_GetProcInfo(int pid, P1_ProcInfo *info) {
     int         result = P1_SUCCESS;
-    // fill in info here
+
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) == 0) {
+        USLOSS_IllegalInstruction();
+    }
+
+    if (pid >= 0 && pid < P1_MAXPROC) {
+        if (processTable[pid].state != P1_STATE_FREE) {
+            info->cpu = processTable[pid].cpuTime;
+            info->priority = processTable[pid].priority;
+            info->state = processTable[pid].state;
+            info->numChildren = processTable[pid].numOfChildren;
+            info->lid = processTable[pid].lid;
+            info->vid = processTable[pid].vid;
+            info->name = processTable[pid].name;
+            info->children = processTable[pid].children;
+
+            return result;
+        }
+    }
+    result = P1_INVALID_PID;
     return result;
 }
-
-
-
-
-
-
 
