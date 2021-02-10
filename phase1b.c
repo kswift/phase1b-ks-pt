@@ -60,6 +60,9 @@ void launch(void) {
 }
 
 void P1ProcInit(void) {
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) == 0) {
+        USLOSS_IllegalInstruction();
+    }
     P1ContextInit();
     for (int i = 0; i < P1_MAXPROC; i++) {
         processTable[i].cid = i;
