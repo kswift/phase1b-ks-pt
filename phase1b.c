@@ -27,12 +27,20 @@ typedef struct PCB {
 static PCB processTable[P1_MAXPROC];   // the process table
 static int currProcessID = 0;
 
+// create 6 processes
+
 void launch(void) {
     assert(contexts[currentCid].startFunc != NULL);
     P1_Quit(processTable[currentPid].startFunc(args));
 }
 
+// invoke P1-Quit with status code 1024
+void P1Handler(int dev, void *arg) {
+    P1_Quit(1024);
+}
+
 void P1ProcInit(void) {
+    USLOSS_IntVec[USLOSS_ILLEGAL_INT] = P1Handler();
     P1ContextInit();
     for (int i = 0; i < P1_MAXPROC; i++) {
         processTable[i].cid = i;
@@ -57,7 +65,15 @@ int P1_Fork(char *name, int (*func)(void*), void *arg, int stacksize, int priori
     int result = P1_SUCCESS;
 
     // check for kernel mode
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) == 0) {
+        USLOSS_IllegalInstruction();
+    }
+
     // disable interrupts
+    if ((USLOSS_PSR_CURRENT_INT & USLOSS_PsrGet()) == 2) {
+        USLOSS_PsrSet(USLOSS_PsrGet() & ~2);
+    }
+
     // check all parameters
     // create a context using P1ContextCreate
     // allocate and initialize PCB
@@ -69,7 +85,16 @@ int P1_Fork(char *name, int (*func)(void*), void *arg, int stacksize, int priori
 
 void P1_Quit(int status) {
     // check for kernel mode
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) != 1) {
+        USLOSS_IllegalInstruction();
+        // call 
+    }
+
     // disable interrupts
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) == 2) {
+        P1DisableInterrupts();
+    }
+
     // remove from ready queue, set status to P1_STATE_QUIT
     // if first process verify it doesn't have children, otherwise give children to first process
     // add ourself to list of our parent's children that have quit
@@ -122,10 +147,3 @@ int P1_GetProcInfo(int pid, P1_ProcInfo *info) {
     // fill in info here
     return result;
 }
-
-
-
-
-
-
-
