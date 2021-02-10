@@ -50,6 +50,7 @@ static int currProcessID = 0;
 
 void P1Handler(int dev, void *arg) {
     USLOSS_Console("Error! Illegal Instruction.\n");
+    P1_Quit(1024);
     USLOSS_Halt(0);
 }
 
