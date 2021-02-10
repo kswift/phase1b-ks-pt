@@ -35,8 +35,13 @@ void launch(void) {
 void P1ProcInit(void) {
     P1ContextInit();
     for (int i = 0; i < P1_MAXPROC; i++) {
+        processTable[i].cid = i;
+        processTable[i].cpuTime = 0;
+        processTable[i].priority = 0;
         processTable[i].state = P1_STATE_FREE;
-        processTable[i]
+        processTable[i].numOfChildren = 0;
+        processTable[i].parentID = -1;
+
         // initialize the rest of the PCB
         // when allocating a new control block you need to see whats free
     }
@@ -87,7 +92,23 @@ int P1GetChildStatus(int *cpid, int *status) {
 // IF ITS RUNNING STATE AND IT CALLS QUIT, THEN IT WILL GO QUIT
 int P1SetState(int pid, P1_State state, int lid, int vid) {
     int result = P1_SUCCESS;
+    int status;
+    int cpid;
     // do stuff here
+    if ((state != P1_STATE_READY) || (state != P1_STATE_BLOCKED) || (state != P1_STATE_JOINING) || (state != P1_)STATE_QUIT) {
+        result = P1_INVALID_STATE;
+        return result;
+    }
+    if (pid < P1_MAXPROC && pid >= 0) {
+        for (int i = 0; i < P1_MAXPROC; i++) {
+            if (processTable[i].cid == pid) {
+                processTable[i].state = state;
+            }
+        }
+    }
+    else {
+        return P1_INVALID_STATE;
+    }
     return result;
 }
 
