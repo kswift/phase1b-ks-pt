@@ -119,6 +119,7 @@ int P1GetChildStatus(int *cpid, int *status) {
 // WHAT SHOULD WE DO IF A SPECIFIC TRANSITION OCCURS.
 // IF ITS RUNNING STATE AND IT CALLS QUIT, THEN IT WILL GO QUIT
 int P1SetState(int pid, P1_State state, int lid, int vid) {
+
     int result = P1_SUCCESS;
     int status;
     int cpid;
@@ -132,17 +133,21 @@ int P1SetState(int pid, P1_State state, int lid, int vid) {
         result = P1_INVALID_STATE;
         return result;
     }
-    if (pid < P1_MAXPROC && pid >= 0) {
-        for (int i = 0; i < P1_MAXPROC; i++) {
-            if (processTable[i].cid == pid) {
-                processTable[i].state = state;
+    else {
+        if (pid < P1_MAXPROC && pid >= 0) {
+            for (int i = 0; i < P1_MAXPROC; i++) {
+                if (processTable[i].cid == pid) {
+                    processTable[i].state = state;
+                }
             }
         }
+        else {
+            result = P1_INVALID_STATE;
+            return result;
+        }
+        return result;
     }
-    else {
-        return P1_INVALID_STATE;
-    }
-    return result;
+
 }
 
 void P1Dispatch(int rotate) {
