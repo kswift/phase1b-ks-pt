@@ -27,19 +27,19 @@ typedef struct PCB {
 
 } PCB;
 
-static int priorityQueue1[P1_MAXPROC] = {1};
+static int priorityQueue1[P1_MAXPROC] = {-1};
 static int indexForQueue1 = 0;
 
-static int priorityQueue2[P1_MAXPROC] = {1};
+static int priorityQueue2[P1_MAXPROC] = {-1};
 static int indexForQueue2 = 0;
 
-static int priorityQueue3[P1_MAXPROC] = {1};
+static int priorityQueue3[P1_MAXPROC] = {-1};
 static int indexForQueue3 = 0;
 
-static int priorityQueue4[P1_MAXPROC] = {1};
+static int priorityQueue4[P1_MAXPROC] = {-1};
 static int indexForQueue4 = 0;
 
-static int priorityQueue5[P1_MAXPROC] = {1};
+static int priorityQueue5[P1_MAXPROC] = {-1};
 static int indexForQueue5 = 0;
 
 static int priorityQueue6[1] = {1};
@@ -114,6 +114,13 @@ void P1_Quit(int status) {
 
 int P1GetChildStatus(int *cpid, int *status) {
     int result = P1_SUCCESS;
+
+    if ((USLOSS_PSR_CURRENT_MODE & USLOSS_PsrGet()) == 0) {
+        USLOSS_IllegalInstruction();
+    }
+
+    if (children[])
+
     // do stuff here
     return result;
 }
@@ -151,12 +158,16 @@ int P1SetState(int pid, P1_State state, int lid, int vid) {
         }
         return result;
     }
-
 }
 
 void P1Dispatch(int rotate) {
     // select the highest-priority runnable process
     // call P1ContextSwitch to switch to that process
+
+    if (priorityQueue6[0] == -1 || priorityQueue5[0] == -1 || priorityQueue4[0] == -1 || priorityQueue3[0] == -1 || priorityQueue2[0] == -1 || priorityQueue1[0] == -1 ) {
+        USLOSS_Console("Halting, since there is no runnable processes.");
+        USLOSS_Halt(0);
+    }
 
     status = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &start);
     if (status != USLOSS_DEV_OK) {
